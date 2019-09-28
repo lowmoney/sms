@@ -1,13 +1,16 @@
 from bs4 import BeautifulSoup
 import requests
+import pyshorteners
+from pyshorteners import Shorteners
 
 SEARCH_URL = 'https://gg.deals/games/?title='
 GAME_URL = 'https://gg.deals/game/'
+SHORTNER = pyshorteners.Shortener(Shorteners.TINYURL)
 
 def search(key):
 
     # Load a page with games
-    page = requests.get(SEARCH_URL+key).text
+    page = requests.get(SEARCH_URL+str(key)).text
     soup = BeautifulSoup(page,'html.parser')
 
     # Scrape through the searches and find the top three games
@@ -21,7 +24,7 @@ def search(key):
     prices = []
     links = []
     for title in titles:
-        page = requests.get(GAME_URL + '/' + title.replace(" ",'-') + '/').text
+        page = requests.get(GAME_URL + title.replace(" ",'-') + '/').text
         soup = BeautifulSoup(page,'html.parser')
         pageShops = soup.find_all('a','shop-link')
         pagePrices = soup.find_all('span','numeric')
@@ -32,7 +35,7 @@ def search(key):
         for price in pagePrices:
             prices.append(price.text.strip().replace('~','').split('\n')[0])
         for link in shopLinks:
-            links.append(link['href'])
+            links.append(SHORTNER.short('https://gg.deals'+link['href']))
 
     # Return an array of shops and prices
     return [[shops],[prices],[links]]
